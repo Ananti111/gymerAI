@@ -1,0 +1,1224 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymER AI - Personalized Context-Aware Fitness</title>
+    
+    <!-- Load Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base Styling & Variables */
+        :root {
+            --primary-color: #00c6ff; /* Brighter "Cyber" Blue */
+            --secondary-color: #9c27b0; /* Deep Purple */
+            --glass-bg: rgba(255, 255, 255, 0.1); /* Light glass */
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-light: #f4f4f4;
+            --text-dark: #333;
+            --bg-color: #f0f2f5; /* Light theme background */
+            --text-color: #333;
+            --panel-bg: rgba(255, 255, 255, 0.8); /* More opaque panels */
+            --panel-border: rgba(0, 0, 0, 0.1);
+            --panel-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --error-color: #D32F2F; /* Red for errors */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            overflow: hidden; 
+            background-color: var(--bg-color); /* Light theme bg */
+        }
+        
+        #root {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-color); /* Light theme text */
+        }
+
+        /* Light Theme Glassmorphism */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--panel-shadow);
+            border-radius: 15px;
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.2);
+        }
+
+        /* Header Styles */
+        .glass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.7); /* Lighter header glass */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--panel-border);
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary-color); /* Blue logo text */
+            text-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+        }
+
+        .glass-header nav a, .glass-button {
+            text-decoration: none;
+            color: var(--text-color);
+            margin-left: 25px;
+            font-weight: 600;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background 0.3s ease, color 0.3s ease;
+            cursor: pointer; /* Ensure links and buttons look clickable */
+        }
+
+        .glass-header nav a:hover {
+            background: rgba(0, 198, 255, 0.1);
+            color: var(--primary-color);
+        }
+        
+        /* --- NEW: LANDING PAGE STYLES --- */
+        .hero-section {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+        .hero-section h1 span {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+        }
+        .hero-section p {
+            font-size: 1.25em;
+            color: #555;
+            max-width: 700px;
+            margin: 0 auto 25px;
+        }
+        .landing-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px; /* Increased spacing from 30px for better separation */
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+        }
+        .ai-reasons-list {
+            list-style: none;
+            padding: 0;
+        }
+        .ai-reasons-list li {
+            position: relative;
+            padding-left: 35px;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .ai-reasons-list li::before {
+            content: '✔'; /* Checkmark */
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        /* --- NEW: Image style for landing page --- */
+        .landing-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background-color: #e0e0e0; /* Placeholder background */
+        }
+        
+        /* --- NEW: 3D MODEL SECTION STYLES --- */
+        .threed-model-section {
+            /* This will be the new glass panel */
+            padding-top: 15px; /* Less padding at top */
+        }
+        .threed-container-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            text-align: center;
+        }
+        .threed-canvas-container {
+            position: relative;
+            height: 400px;
+            background: #e0e0e0; /* Placeholder bg for canvas */
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .threed-canvas-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .threed-canvas-container h3 {
+            margin-top: 10px;
+            color: var(--primary-color);
+            font-size: 1.2em;
+        }
+        /* --- END 3D MODEL STYLES --- */
+        
+        /* --- END LANDING PAGE STYLES --- */
+
+        /* Page Container */
+        .page-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex; 
+            flex-direction: column;
+            padding: 20px; /* Add padding to page containers */
+        }
+        
+        /* Dashboard Layout */
+        .dashboard-grid {
+            display: grid;
+            flex-grow: 1;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+        }
+
+        .metrics-panel {
+            grid-column: 1 / 2;
+            min-height: 250px;
+        }
+
+        .workout-card {
+            grid-column: 1 / 2;
+            min-height: 350px;
+        }
+
+        .right-sidebar {
+            grid-column: 2 / 3;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .data-view {
+            margin-top: 15px;
+            line-height: 1.8;
+        }
+
+        .current-plan {
+            margin-top: 15px;
+            line-height: 1.8;
+        }
+
+        .current-plan #current-recommendation {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Panel Icons */
+        .panel-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 15px;
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .panel-header h2 {
+            margin-bottom: 0;
+        }
+
+        /* AI COACH PAGE STYLES */
+        .coach-chat-container-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .coach-chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            /* Using the glass panel style as a base */
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--panel-shadow);
+            border-radius: 15px;
+        }
+
+        .coach-chat-history {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Add gap between messages */
+        }
+
+        .coach-chat-history .message {
+            margin-bottom: 5px; /* Reduced margin, using gap now */
+            max-width: 75%;
+            padding: 15px;
+            border-radius: 20px;
+            word-wrap: break-word; /* Ensure long words don't overflow */
+        }
+        
+        /* Chat bubble styling */
+        .coach-chat-history .message-user {
+            text-align: left; /* User messages on the left too, but styled differently */
+            margin-left: auto; /* Push to the right */
+            background: var(--primary-color);
+            color: #fff; /* White text on blue bg */
+            font-weight: 600;
+            border-radius: 20px 20px 5px 20px;
+        }
+
+        .coach-chat-history .message-ai {
+            text-align: left;
+            margin-right: auto; /* Push to the left */
+            background: #e9e9f0; /* Light grey bg for AI */
+            color: var(--text-color);
+            border-radius: 20px 20px 20px 5px;
+        }
+        
+        .coach-chat-history .message-ai.typing {
+            font-style: italic;
+            color: #888;
+        }
+
+        .coach-chat-history .message-ai strong {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .coach-input-area {
+            padding: 20px;
+            border-top: 1px solid var(--panel-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .coach-input-area textarea {
+            width: 100%;
+            height: 50px; /* Adjusted height */
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text-color);
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+            resize: none; /* Disable resizing */
+        }
+        
+        .coach-input-area textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0, 198, 255, 0.5);
+        }
+
+        .coach-input-area .glass-button {
+            width: auto; /* Fit content */
+            padding: 0 25px; /* Adjust padding */
+            font-size: 1em;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+        
+        /* --- NEW: LOGIN PAGE STYLES --- */
+        
+        .login-container {
+             width: 100%;
+             max-width: 450px;
+        }
+
+        .login-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--panel-border);
+            margin-bottom: 25px;
+        }
+        
+        .login-tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #888;
+            border-bottom: 3px solid transparent;
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .login-tab-btn:hover {
+            color: var(--text-color);
+        }
+        .login-tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0, 198, 255, 0.5);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .auth-error {
+            color: var(--error-color);
+            background: rgba(211, 47, 47, 0.1);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none; /* Hidden by default */
+        }
+
+        /* --- END LOGIN STYLES --- */
+
+
+        /* Utility */
+        h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr; /* Stack columns on mobile */
+            }
+            .right-sidebar {
+                grid-row: auto; /* Unset the row span */
+            }
+            .glass-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 600px) {
+             .glass-header {
+                flex-direction: column;
+                padding: 15px;
+             }
+             .glass-header nav {
+                margin-top: 10px;
+             }
+             .glass-header nav a {
+                margin-left: 10px;
+             }
+             .coach-input-area {
+                flex-direction: column;
+             }
+             .coach-input-area .glass-button {
+                width: 100%;
+             }
+             .page-container {
+                padding: 10px;
+             }
+             .dashboard-grid {
+                gap: 10px;
+             }
+             .glass-panel {
+                padding: 15px;
+             }
+             .login-container {
+                padding: 15px; /* Adjust padding on mobile */
+             }
+        }
+    </style>
+</head>
+<body>
+
+<div id="root">
+    
+    <!-- Header: Navigation and Logo -->
+    <header class="glass-header">
+        <h1 class="logo" id="nav-logo">gymER AI</h1>
+        <nav>
+            <a id="nav-home">Home</a> <!-- ADDED THIS LINK -->
+            <a id="nav-dashboard">Dashboard</a>
+            <a id="nav-coach">AI Coach</a>
+            <a id="nav-login">Log In</a>
+            <button class="glass-button" id="nav-get-started">Get Started</button>
+        </nav>
+    </header>
+
+    <!-- Page 1: Dashboard (HIDDEN by default) -->
+    <div id="page-dashboard" class="page-container" style="display: none;">
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+
+            <!-- 1. Real-Time Health Status Panel -->
+            <section class="glass-panel metrics-panel" id="RealTimeMetrics">
+                <div class="panel-header">
+                    <!-- SVG Icon: Heart -->
+                    <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>
+                    <h2>Real-Time Health Status</h2>
+                </div>
+                <p>Data continually updated from your wearable devices.</p>
+                <div class="data-view">
+                    <p><strong>Heart Rate:</strong> <span id="hr-data">... fetching ...</span></p>
+                    <p><strong>Sleep Quality:</strong> <span id="sleep-data">... fetching ...</span></p>
+                    <p><strong>Today's Stress Level:</strong> <span id="stress-data">... fetching ...</span></p>
+                </div>
+            </section>
+
+            <!-- 2. Context-Aware Workout Card -->
+            <section class="glass-panel workout-card" id="ContextAwareWorkout">
+                 <div class="panel-header">
+                    <!-- SVG Icon: Clipboard -->
+                    <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375M10.125 2.25v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375M13.5 14.25v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375M16.5 12v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375M18 15.75v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375M19.125 18v.375c0 .621-.504 1.125-1.125 1.125h-.375m1.5.375h.375c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-.375" />
+                    </svg>
+                    <h2 id="workout-title">Your Personalized Plan</h2>
+                </div>
+                <p id="workout-message">Workout programs are automatically adjusted based on real-time activity and biological signals.</p>
+
+                <div class="current-plan">
+                    <p><strong>Plan Status:</strong> <span id="plan-status">Loading...</span></p>
+                    <p><strong>Recommendation:</strong> <span id="current-recommendation"></span></p>
+                </div>
+                <button class="glass-button" style="margin-top: 20px;">Start Activity</button>
+            </section>
+            
+            <!-- Right Sidebar for Wellness and Nutrition -->
+            <div class="right-sidebar">
+                
+                <!-- 3. Nutritional Advice Panel -->
+                <section class="glass-panel" id="NutritionPanel">
+                    <div class="panel-header">
+                        <!-- SVG Icon: Book -->
+                        <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
+                        </svg>
+                        <h2>Nutritional Advice</h2>
+                    </div>
+                    <p>Individualized food recommendations adapted to your preferences and fitness objectives.</p>
+                    <ul id="nutrition-list" style="margin-top: 10px; list-style-position: inside;">
+                        <li>High-Protein Meal Prep Plan</li>
+                        <li>Hydration Reminder: Drink 2 more glasses!</li>
+                    </ul>
+                </section>
+
+                <!-- 4. Wellness Tools Panel -->
+                <section class="glass-panel" id="WellnessPanel">
+                    <div class="panel-header">
+                        <!-- SVG Icon: Wind -->
+                        <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 3.75Zm0 16.5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm9-9.75a.75.75 0 0 1 .75.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Zm-19.5 0a.75.75 0 0 1 .75.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Zm16.06 7.06a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-1.5 0v-.01a.75.75 0 0 1 .75-.75Zm-13.12 0a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-1.5 0v-.01a.75.75 0 0 1 .75-.75Zm13.12-7.06a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-1.5 0v-.01a.75.75 0 0 1 .75-.75Zm-13.12 0a.75.75 0 0 1 .75.75v.01a.75.75 0 0 1-1.5 0v-.01a.75.75 0 0 1 .75-.75Z" />
+                        </svg>
+                        <h2>Wellness Tools</h2>
+                    </div>
+                    <p>Includes guided meditation, stress reduction prompts, and sleep summaries.</p>
+                    <p style="margin-top: 10px;">Check your sleep summary for key insights.</p>
+                    <button class="glass-button" style="margin-top: 15px;">Access Guided Meditation</button>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Page 2: AI Coach (Hidden by default) -->
+    <div id="page-coach" class="page-container" style="display: none;">
+        <div class="coach-chat-container-wrapper">
+            <div class="coach-chat-container">
+                <div class="coach-chat-history" id="coach-chat-history">
+                    <div class="message message-ai">
+                        <strong>GymER AI Coach:</strong>
+                        <p>Hello! I'm your AI Coach. How can I help you with your fitness, nutrition, or wellness goals today?</p>
+                    </div>
+                    <div class="message message-user">
+                        <p>I want to plan my workouts for this week.</p>
+                    </div>
+                     <div class="message message-ai">
+                        <strong>GymER AI Coach:</strong>
+                        <p>Great! Let's get started. Based on your current goals and recent activity, I suggest the following:
+                        <br>- **Monday:** Strength Training (Upper Body)
+                        <br>- **Tuesday:** Cardio & Core
+                        <br>- **Wednesday:** Active Recovery (Yoga)
+                        <br>- **Thursday:** Strength Training (Lower Body)
+                        <br>- **Friday:** HIIT
+                        <br>
+                        How does that sound?
+                        </p>
+                    </div>
+                </div>
+                <div class="coach-input-area">
+                    <textarea id="coach-text-input" placeholder="Type your message to the AI coach..."></textarea>
+                    <button class="glass-button" id="coach-send-btn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: Login/Sign Up (Hidden by default) -->
+    <div id="page-login" class="page-container" style="display: none;">
+        <!-- This wrapper centers the login panel -->
+        <div class="coach-chat-container-wrapper"> 
+            <div class="glass-panel login-container">
+                <div class="login-tabs">
+                    <button id="login-tab" class="login-tab-btn active">Log In</button>
+                    <button id="signup-tab" class="login-tab-btn">Sign Up</button>
+                </div>
+                
+                <h2 id="form-title" style="text-align: center;">Log In to Your Account</h2>
+                
+                <form id="auth-form" onsubmit="return false;"> <!-- onsubmit prevents page refresh -->
+                    
+                    <!-- Error Message Display -->
+                    <div id="auth-error-message" class="auth-error"></div>
+
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <!-- This field is for Sign Up only -->
+                    <div class="input-group" id="confirm-password-field" style="display: none;">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password">
+                    </div>
+                    
+                    <button id="auth-button" class="glass-button auth-btn">Log In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW Page 4: Landing Page (VISIBLE by default) -->
+    <div id="page-landing" class="page-container" style="display: flex;">
+        <div> <!-- Added a wrapper div to allow scrolling -->
+            <section class="hero-section"> <!-- Corrected typo from "classs" to "class" -->
+                <h1>Welcome to <span>gymER AI</span></h1>
+                <p>Your AI-powered, context-aware partner for fitness, nutrition, and wellness. We don't just track your data—we adapt to it.</p>
+                <button class="glass-button" id="landing-get-started-btn" style="padding: 15px 30px; font-size: 1.1em;">Get Started Now</button>
+            </section>
+            
+            <main class="landing-content">
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-7.5 0v-1.5m0-15V3" /></svg>
+                        <h2>The Future of Fitness: AI & You</h2>
+                    </div>
+                    <!-- Added Image Placeholder -->
+                    <img src="https://placehold.co/1200x400/00c6ff/white?text=AI+Analyzing+Fitness+Data" alt="Abstract AI data streams analyzing gym fitness" class="landing-image">
+                    <p style="line-height: 1.6;">(Research Summary)<br>
+                    The digital fitness world is filled with apps, but most are static. They give you a plan and expect you to follow it, regardless of how you feel, how you slept, or what your day is like. 
+                    <br><br>
+                    Artificial Intelligence is changing this. As outlined in the "Contextual and Literature Review," AI allows apps to move from a "one-size-fits-all" model to a truly personalized experience. It can analyze your behavior, learn your preferences, and act as a 24/7 virtual coach. However, many apps still fail to keep users engaged because they lack one key thing: <strong>context</strong>.
+                    </p>
+                </section>
+
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0M3.75 18H7.5m3-6h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0M3.75 12H7.5" /></svg>
+                        <h2>10 Ways AI Can Help Your Health</h2>
+                    </div>
+                    <!-- Added Image Placeholder (Treadmill) -->
+                    <img src="https://placehold.co/1200x400/5d5dff/white?text=Person+on+Treadmill+with+Data" alt="Person on a treadmill, a piece of gym equipment, with AI data" class="landing-image">
+                    <ol class="ai-reasons-list">
+                        <li><strong>Truly Personalized Workout Plans:</strong> Creates routines based on your specific goals, abilities, and available equipment.</li>
+                        <li><strong>Dynamic Plan Adjustments:</strong> Changes your workout if you slept poorly, are stressed, or (for GymER) if it's raining outside.</li>
+                        <li><strong>24/7 Motivational Support:</strong> An AI coach is always available to answer questions and provide encouragement.</li>
+                        <li><strong>Personalized Nutritional Advice:</strong> Tailors meal plans and suggestions to your dietary preferences and fitness goals.</li>
+                        <li><strong>Advanced Sleep Quality Analysis:</strong> Goes beyond tracking hours to understand your sleep cycles and their impact on your energy.</li>
+                        <li><strong>Stress & Recovery Monitoring:</strong> Uses data like heart rate variability (HRV) to know when you should push hard and when you need to rest.</li>
+                        <li><strong>Real-time Form Correction:</strong> (Future Feature) Can use your phone's camera to analyze your form and prevent injury.</li>
+                        <li><strong>Behavior Change Motivation:</strong> Learns what motivates you (data, badges, praise) and uses it to keep you on track.</li>
+                        <li><strong>Predictive Health Insights:</strong> Can spot trends in your data (like decreased activity or poor sleep) and warn you before they become problems.</li>
+                        <li><strong>Accessibility and Convenience:</strong> Puts a personal trainer, nutritionist, and wellness coach in your pocket for a fraction of the cost.</li>
+                    </ol>
+                </section>
+                
+                <!-- NEW 3D MODEL SECTION -->
+                <section class="glass-panel threed-model-section">
+                    <div class="panel-header">
+                        <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.68 16.6m0 0l-1.07-4.279L9 21.672M13.68 16.6s-1.6,1.6-3.36,1.6c-3.049,0-5.49-2.479-5.49-5.524s2.441-5.524,5.49-5.524c1.76,0,3.36,1.6,3.36,1.6l4.278-1.07m0 0L21.672 9s-1.6-1.6-3.36-1.6c-3.049,0-5.49,2.479-5.49,5.524s2.441,5.524,5.49,5.524c1.76,0,3.36-1.6,3.36-1.6" /></svg>
+                        <h2>3D Anatomy Explorer</h2>
+                    </div>
+                    <p style="text-align: center; margin-bottom: 20px;">Explore simplified, dynamic models of the human body and skeleton.</p>
+                    <div class="threed-container-wrapper">
+                        <div class="threed-canvas-container">
+                            <div id="body-canvas-container"></div>
+                            <h3>Dynamic Body Model</h3>
+                        </div>
+                        <div class="threed-canvas-container">
+                            <div id="skeleton-canvas-container"></div>
+                            <h3>Dynamic Skeleton Model</h3>
+                        </div>
+                    </div>
+                </section>
+                <!-- END 3D MODEL SECTION -->
+
+                <section class="glass-panel">
+                    <div class="panel-header">
+                        <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" /></svg>
+                        <h2>Why GymER AI Works</h2>
+                    </div>
+                    <!-- Added Image Placeholder -->
+                    <img src="https://placehold.co/1200x400/9c27b0/white?text=User+Checking+Smartwatch+App" alt="User checking a smartwatch, connecting AI to their gym workout" class="landing-image">
+                    <p style="line-height: 1.6;">
+                    GymER AI was designed to fill the biggest gap in the digital health market: <strong>Context-Awareness.</strong>
+                    <br><br>
+                    Other apps fail because they don't know *why* you skipped a workout. Were you busy? Stressed? Did you sleep badly? Was the weather terrible?
+                    <br><br>
+                    <strong>GymER knows.</strong> By integrating with your wearable data (like sleep and stress) and real-world data (like the weather), our AI doesn't just give you a static plan. It adapts to your life, right now.
+                    <br><br>
+                    - <strong>Slept badly?</strong> GymER will suggest a lighter workout or a wellness session, not just tell you to push through.
+                    - <strong>Raining outside?</strong> The AI will instantly swap your outdoor run for an effective indoor routine.
+                    <br><br>
+                    GymER bridges the gap between tracking your data and actually *using* it to make your health journey easier and more effective.
+                    </p>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- 
+  EMBEDDED JAVASCRIPT
+  (All logic is inside this <script> tag)
+-->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // --- 1. PAGE NAVIGATION LOGIC ---
+        const navHome = document.getElementById('nav-home'); // ADDED THIS
+        const navDashboard = document.getElementById('nav-dashboard');
+        const navCoach = document.getElementById('nav-coach');
+        const navLogin = document.getElementById('nav-login');
+        const navGetStarted = document.getElementById('nav-get-started');
+        const navLogo = document.getElementById('nav-logo'); // New
+        const landingGetStartedBtn = document.getElementById('landing-get-started-btn'); // New
+        
+        const pageDashboard = document.getElementById('page-dashboard');
+        const pageCoach = document.getElementById('page-coach');
+        const pageLogin = document.getElementById('page-login');
+        const pageLanding = document.getElementById('page-landing'); // New
+
+        // Helper function to show the correct page
+        function showPage(pageToShow) {
+            pageDashboard.style.display = 'none';
+            pageCoach.style.display = 'none';
+            pageLogin.style.display = 'none';
+            pageLanding.style.display = 'none'; // Hide landing page too
+            pageToShow.style.display = 'flex';
+        }
+
+        // --- NEW STARTING PAGE ---
+        // On load, show the Landing Page by default
+        showPage(pageLanding); 
+
+        // New listener for the Home link
+        if (navHome) { // Added check
+            navHome.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage(pageLanding);
+            });
+        }
+
+        navDashboard.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            // This button should only work if you're "logged in"
+            // For now, it just shows the (empty) dashboard
+            showPage(pageDashboard);
+        });
+
+        navCoach.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(pageCoach);
+        });
+        
+        // New listener for the Logo
+        navLogo.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(pageLanding);
+        });
+
+        // New listeners for Login and Get Started
+        navLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(pageLogin);
+            showLoginForm(); // Go to login page, show Login tab
+        });
+        
+        navGetStarted.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(pageLogin);
+            showSignupForm(); // Go to login page, show Sign Up tab
+        });
+
+        // New listener for the button on the landing page
+        landingGetStartedBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(pageLogin);
+            showSignupForm(); // Go to login page, show Sign Up tab
+        });
+
+
+        // --- 2. DASHBOARD METRICS LOGIC ---
+        const hrDataElement = document.getElementById('hr-data');
+        const sleepDataElement = document.getElementById('sleep-data');
+        const stressDataElement = document.getElementById('stress-data');
+        const workoutTitleElement = document.getElementById('workout-title');
+        const planStatusElement = document.getElementById('plan-status');
+        const recommendationElement = document.getElementById('current-recommendation');
+        
+        const simulatedContextData = {
+            heartRate: '68 BPM (Resting)',
+            sleepQuality: 'Good (7.5h)',
+            stressLevel: 'Low',
+            weather: 'Sunny',
+            location: 'Home',
+            motivationLevel: 'Good',
+        };
+
+        function renderMetrics(data) {
+            if (hrDataElement) { // Check if elements exist (they are on dashboard page)
+                hrDataElement.textContent = data.heartRate;
+                sleepDataElement.textContent = data.sleepQuality;
+                stressDataElement.textContent = data.stressLevel;
+            }
+        }
+
+        function generateContextAwarePlan(context) {
+            if (!workoutTitleElement) return; // Exit if not on dashboard
+
+            let title = '💪 Your Personalized Plan';
+            let status = 'Dynamic Adjustment';
+            let recommendation = 'Based on your routine, we recommend a standard workout.';
+
+            // Scenarios...
+            if (context.sleepQuality.includes('Poor') || context.stressLevel === 'High') {
+                title = '🧘 Wellness Focus: Stress Reduction';
+                recommendation = '⚠️ **ADJUSTED:** Your poor sleep and high stress suggest rest. We recommend a **lighter stretching and guided mindfulness session** (30 mins).';
+            } else if (context.weather === 'Rainy' && context.location === 'Home') {
+                title = '🏠 Indoor Focus: HIIT';
+                recommendation = '☔ **ADJUSTED:** The rain limits outdoor options. We recommend an **indoor bodyweight HIIT routine** followed by a short stretch.';
+            } else if (context.sleepQuality.includes('Good') && context.stressLevel === 'Low') {
+                 title = '🔥 Peak Performance Mode';
+                 recommendation = '✅ **ON TRACK:** All systems are go! Your plan includes a challenging **Strength Training Progression** to maximize performance.';
+            }
+
+            // Update the UI
+            workoutTitleElement.textContent = title;
+            planStatusElement.textContent = status;
+            recommendationElement.innerHTML = recommendation;
+        }
+
+        // Run Dashboard functions
+        renderMetrics(simulatedContextData);
+        generateContextAwarePlan(simulatedContextData);
+
+        
+        // --- 3. AI COACH CHAT LOGIC ---
+        
+        const coachChatHistory = document.getElementById('coach-chat-history');
+        const coachTextInput = document.getElementById('coach-text-input');
+        const coachSendButton = document.getElementById('coach-send-btn');
+
+        function scrollChatToBottom() {
+            coachChatHistory.scrollTop = coachChatHistory.scrollHeight;
+        }
+
+        function addUserMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'message-user');
+            messageElement.textContent = message;
+            coachChatHistory.appendChild(messageElement);
+            scrollChatToBottom();
+        }
+
+        function addAiMessage(message, isTyping = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'message-ai');
+            if (isTyping) {
+                messageElement.classList.add('typing');
+                messageElement.innerHTML = '<strong>GymER AI Coach:</strong> <span>...</span>';
+            } else {
+                messageElement.innerHTML = `<strong>GymER AI Coach:</strong> ${message}`;
+            }
+            coachChatHistory.appendChild(messageElement);
+            scrollChatToBottom();
+            return messageElement;
+        }
+
+        function getSimulatedAiResponse(userMessage) {
+            const msg = userMessage.toLowerCase();
+            
+            if (msg.includes('hello') || msg.includes('hi')) {
+                return 'Hello! How can I assist with your fitness goals today?';
+            }
+            if (msg.includes('plan') || msg.includes('workout')) {
+                return 'Great question! Based on your data, I recommend a 4-day split: Upper Body, Lower Body, Cardio/Core, and Active Recovery. Would you like me to create that plan?';
+            }
+            if (msg.includes('nutrition') || msg.includes('food') || msg.includes('diet')) {
+                return 'For nutrition, your current goal is 2,200 calories with 150g of protein. I suggest a high-protein breakfast like Greek yogurt with berries.';
+            }
+            if (msg.includes('thank')) {
+                return 'You\'re welcome! Keep up the great work.';
+            }
+            return 'I am processing your request... Can you provide more detail on your goals for today?';
+        }
+
+        function handleSendMessage() {
+            const message = coachTextInput.value.trim();
+            if (message === '') return; 
+
+            addUserMessage(message);
+            coachTextInput.value = ''; 
+
+            const typingIndicator = addAiMessage('...', true);
+
+            setTimeout(() => {
+                coachChatHistory.removeChild(typingIndicator);
+                const aiResponse = getSimulatedAiResponse(message);
+                addAiMessage(aiResponse);
+            }, 1500);
+        }
+
+        if(coachSendButton) { // Check if the button exists before adding listener
+            coachSendButton.addEventListener('click', handleSendMessage);
+            coachTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+        }
+
+        
+        // --- 4. NEW: LOGIN/SIGNUP PAGE LOGIC ---
+        
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const formTitle = document.getElementById('form-title');
+        const confirmPasswordField = document.getElementById('confirm-password-field');
+        const authButton = document.getElementById('auth-button');
+        const authForm = document.getElementById('auth-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const authErrorMessage = document.getElementById('auth-error-message');
+
+        function showLoginForm() {
+            loginTab.classList.add('active');
+            signupTab.classList.remove('active');
+            formTitle.textContent = 'Log In to Your Account';
+            confirmPasswordField.style.display = 'none';
+            authButton.textContent = 'Log In';
+            authErrorMessage.style.display = 'none'; // Hide error
+            authForm.reset();
+        }
+
+        function showSignupForm() {
+            loginTab.classList.remove('active');
+            signupTab.classList.add('active');
+            formTitle.textContent = 'Create a New Account';
+            confirmPasswordField.style.display = 'block';
+            authButton.textContent = 'Create Account';
+            authErrorMessage.style.display = 'none'; // Hide error
+            authForm.reset();
+        }
+
+        // Add Listeners for tabs
+        if (loginTab) {
+            loginTab.addEventListener('click', showLoginForm);
+            signupTab.addEventListener('click', showSignupForm);
+        }
+
+        // Add Listener for the main Auth button
+        if (authButton) {
+            authButton.addEventListener('click', () => {
+                authErrorMessage.style.display = 'none'; // Hide error on new attempt
+                
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                // Check if we're in Sign Up mode
+                if (signupTab.classList.contains('active')) {
+                    // --- Sign Up Logic ---
+                    if (!email || !password || !confirmPassword) {
+                        authErrorMessage.textContent = 'Please fill out all fields.';
+                        authErrorMessage.style.display = 'block';
+                        return;
+                    }
+                    if (password !== confirmPassword) {
+                        authErrorMessage.textContent = 'Passwords do not match!';
+                        authErrorMessage.style.display = 'block';
+                        return;
+                    }
+                    if (password.length < 8) {
+                        authErrorMessage.textContent = 'Password must be at least 8 characters long.';
+                        authErrorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    console.log('Creating account with:', email);
+                    // Simulate success: reset form and switch to login tab
+                    authForm.reset();
+                    showLoginForm();
+                    
+                } else {
+                    // --- Log In Logic ---
+                    if (!email || !password) {
+                        authErrorMessage.textContent = 'Please enter email and password.';
+                        authErrorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    console.log('Logging in with:', email);
+                    // Simulate success: reset form and go to dashboard
+                    authForm.reset();
+                    showPage(pageDashboard);
+                }
+            });
+        }
+
+        console.log('GymER AI Initialized (Standalone Mode)');
+
+        
+        // --- 5. NEW: THREE.JS 3D MODEL LOGIC ---
+        
+        // Check if Three.js is loaded
+        if (typeof THREE !== 'undefined') {
+            console.log('Three.js is loaded. Initializing 3D models...');
+            init3DModels();
+        } else {
+            console.error('Three.js library is not loaded.');
+        }
+
+        function init3DModels() {
+            // --- Scene 1: Abstract Body Model ---
+            const bodyContainer = document.getElementById('body-canvas-container');
+            if (bodyContainer) {
+                const sceneBody = new THREE.Scene();
+                sceneBody.background = new THREE.Color(0xf0f2f5); // Match light theme
+                const cameraBody = new THREE.PerspectiveCamera(75, bodyContainer.clientWidth / 400, 0.1, 1000); // 400 is height
+                const rendererBody = new THREE.WebGLRenderer({ antialias: true });
+                rendererBody.setSize(bodyContainer.clientWidth, 400); // Fixed height from CSS
+                bodyContainer.appendChild(rendererBody.domElement);
+
+                // Lighting
+                const ambientLightBody = new THREE.AmbientLight(0xffffff, 0.6);
+                sceneBody.add(ambientLightBody);
+                const directionalLightBody = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLightBody.position.set(5, 10, 7.5);
+                sceneBody.add(directionalLightBody);
+
+                // Abstract Body
+                const bodyGroup = new THREE.Group();
+                // Get the --primary-color from CSS, or use a fallback
+                const primaryColorCSS = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#00c6ff';
+                const material = new THREE.MeshStandardMaterial({ color: primaryColorCSS, roughness: 0.5 });
+                
+                // Torso
+                const torsoGeom = new THREE.CylinderGeometry(1, 1.5, 2.5, 32);
+                const torso = new THREE.Mesh(torsoGeom, material);
+                bodyGroup.add(torso);
+
+                // Head
+                const headGeom = new THREE.SphereGeometry(0.7, 32, 32);
+                const head = new THREE.Mesh(headGeom, material);
+                head.position.y = 2.2;
+                bodyGroup.add(head);
+
+                // Limbs (simple sticks)
+                const limbGeom = new THREE.CylinderGeometry(0.2, 0.2, 2, 32);
+                const arm1 = new THREE.Mesh(limbGeom, material);
+                arm1.position.set(-1.2, 0.5, 0);
+                arm1.rotation.z = Math.PI / 6;
+                bodyGroup.add(arm1);
+                
+                const arm2 = new THREE.Mesh(limbGeom, material);
+                arm2.position.set(1.2, 0.5, 0);
+                arm2.rotation.z = -Math.PI / 6;
+                bodyGroup.add(arm2);
+
+                const leg1 = new THREE.Mesh(limbGeom, material);
+                leg1.position.set(-0.8, -2, 0);
+                leg1.rotation.z = Math.PI / 20;
+                bodyGroup.add(leg1);
+
+                const leg2 = new THREE.Mesh(limbGeom, material);
+                leg2.position.set(0.8, -2, 0);
+                leg2.rotation.z = -Math.PI / 20;
+                bodyGroup.add(leg2);
+
+                sceneBody.add(bodyGroup);
+                cameraBody.position.z = 7;
+
+                // Animation Loop for Body
+                function animateBody() {
+                    requestAnimationFrame(animateBody);
+                    bodyGroup.rotation.y += 0.01;
+                    rendererBody.render(sceneBody, cameraBody);
+                }
+                animateBody();
+
+            } else {
+                console.error('Body canvas container not found.');
+            }
+
+            // --- Scene 2: Abstract Skeleton Model ---
+            const skeletonContainer = document.getElementById('skeleton-canvas-container');
+            if (skeletonContainer) {
+                const sceneSkeleton = new THREE.Scene();
+                sceneSkeleton.background = new THREE.Color(0xf0f2f5);
+                const cameraSkeleton = new THREE.PerspectiveCamera(75, skeletonContainer.clientWidth / 400, 0.1, 1000);
+                const rendererSkeleton = new THREE.WebGLRenderer({ antialias: true });
+                rendererSkeleton.setSize(skeletonContainer.clientWidth, 400);
+                skeletonContainer.appendChild(rendererSkeleton.domElement);
+
+                // Lighting
+                const ambientLightSkel = new THREE.AmbientLight(0xffffff, 0.6);
+                sceneSkeleton.add(ambientLightSkel);
+                const directionalLightSkel = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLightSkel.position.set(5, 10, 7.5);
+                sceneSkeleton.add(directionalLightSkel);
+
+                // Abstract Skeleton (lines)
+                const skeletonGroup = new THREE.Group();
+                const skelMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8, wireframe: true });
+                
+                // Using same geometries but with wireframe material
+                const torsoGeomSkel = new THREE.CylinderGeometry(1, 1.5, 2.5, 16);
+                const torsoSkel = new THREE.Mesh(torsoGeomSkel, skelMaterial);
+                skeletonGroup.add(torsoSkel);
+
+                const headGeomSkel = new THREE.SphereGeometry(0.7, 16, 16);
+                const headSkel = new THREE.Mesh(headGeomSkel, skelMaterial);
+                headSkel.position.y = 2.2;
+                skeletonGroup.add(headSkel);
+                
+                const limbGeomSkel = new THREE.CylinderGeometry(0.2, 0.2, 2, 16);
+                const arm1Skel = new THREE.Mesh(limbGeomSkel, skelMaterial);
+                arm1Skel.position.set(-1.2, 0.5, 0);
+                arm1Skel.rotation.z = Math.PI / 6;
+                skeletonGroup.add(arm1Skel);
+                
+                const arm2Skel = new THREE.Mesh(limbGeomSkel, skelMaterial);
+                arm2Skel.position.set(1.2, 0.5, 0);
+                arm2Skel.rotation.z = -Math.PI / 6;
+                skeletonGroup.add(arm2Skel);
+                
+                const leg1Skel = new THREE.Mesh(limbGeomSkel, skelMaterial);
+                leg1Skel.position.set(-0.8, -2, 0);
+                leg1Skel.rotation.z = Math.PI / 20;
+                skeletonGroup.add(leg1Skel);
+
+                const leg2Skel = new THREE.Mesh(limbGeomSkel, skelMaterial);
+                leg2Skel.position.set(0.8, -2, 0);
+                leg2Skel.rotation.z = -Math.PI / 20;
+                skeletonGroup.add(leg2Skel);
+                
+                sceneSkeleton.add(skeletonGroup);
+                cameraSkeleton.position.z = 7;
+
+                // Animation Loop for Skeleton
+                function animateSkeleton() {
+                    requestAnimationFrame(animateSkeleton);
+                    skeletonGroup.rotation.y -= 0.01; // Rotate opposite direction
+                    rendererSkeleton.render(sceneSkeleton, cameraSkeleton);
+                }
+                animateSkeleton();
+            } else {
+                 console.error('Skeleton canvas container not found.');
+            }
+
+            // Handle window resize for both canvases
+            window.addEventListener('resize', () => {
+                if(bodyContainer) {
+                    const width = bodyContainer.clientWidth;
+                    const height = 400; // Fixed height
+                    cameraBody.aspect = width / height;
+                    cameraBody.updateProjectionMatrix();
+                    rendererBody.setSize(width, height);
+                }
+                if(skeletonContainer) {
+                    const width = skeletonContainer.clientWidth;
+                    const height = 400; // Fixed height
+                    cameraSkeleton.aspect = width / height;
+                    cameraSkeleton.updateProjectionMatrix();
+                    rendererSkeleton.setSize(width, height);
+                }
+            });
+        }
+
+    });
+</script>
+
+</body>
+</html>
+
